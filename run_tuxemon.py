@@ -78,6 +78,14 @@ def build_parser() -> ArgumentParser:
         default=None,
         help="Path for Hermes JSONL decision and telemetry traces.",
     )
+    parser.add_argument(
+        "--hermes-autoplay",
+        action="store_true",
+        default=False,
+        help=(
+            "Let Hermes drive all combat turns for deterministic validation."
+        ),
+    )
 
     return parser
 
@@ -137,6 +145,10 @@ def apply_config_from_args(config: TuxemonConfig, args: Namespace) -> None:
 
     if getattr(args, "hermes_agent", False) or args.mod == "hermes_control":
         config.config_model.hermes.enabled = True
+
+    if getattr(args, "hermes_autoplay", False):
+        config.config_model.hermes.enabled = True
+        config.config_model.hermes.autoplay = True
 
     if getattr(args, "hermes_provider", None):
         config.config_model.hermes.provider = args.hermes_provider

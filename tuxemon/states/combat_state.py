@@ -523,7 +523,10 @@ class CombatState(CombatAnimations):
             if monster.is_charging:
                 continue
 
-            if char in self.combat_session.human_players:
+            if (
+                char in self.combat_session.human_players
+                and not self.hermes_controls_character(char)
+            ):
                 # Still add to queue for menu interaction
                 self._decision_queue.append(monster)
             else:
@@ -533,6 +536,13 @@ class CombatState(CombatAnimations):
         # Start the menu flow for human players
         if self._decision_queue:
             self.update_phase()
+
+    def hermes_controls_character(self, character: NPC) -> bool:
+        runtime = getattr(self.client, "hermes_runtime", None)
+        return (
+            runtime is not None
+            and runtime.should_control_character(character)
+        )
 
     def remove_monster_from_play(self, monster: Monster) -> None:
         """
@@ -1104,7 +1114,11 @@ class CombatState(CombatAnimations):
         positions_available = session.get_available_positions(player)
 
         for _ in range(positions_available):
-            if player in session.human_players and ask:
+            if (
+                player in session.human_players
+                and ask
+                and not self.hermes_controls_character(player)
+            ):
                 self.ask_player_for_monster(player)
             else:
                 replacement = self.ai_manager.choose_replacement_monster(

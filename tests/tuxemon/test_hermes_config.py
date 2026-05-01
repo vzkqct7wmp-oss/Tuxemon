@@ -13,6 +13,7 @@ def test_hermes_cli_args_apply_before_launch_config():
             "local",
             "--hermes-trace",
             "trace.jsonl",
+            "--hermes-autoplay",
         ]
     )
     config = TuxemonConfig(config_path=None)
@@ -23,5 +24,6 @@ def test_hermes_cli_args_apply_before_launch_config():
     assert config.skip_titlescreen is True
     assert config.splash is False
     assert config.hermes.enabled is True
+    assert config.hermes.autoplay is True
     assert config.hermes.provider == "local"
     assert config.hermes.trace_path == "trace.jsonl"

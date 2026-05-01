@@ -38,12 +38,14 @@ class HermesRuntime:
         trace: JsonlTraceWriter,
         controlled_trainers: list[str],
         strict_validation: bool = True,
+        autoplay: bool = False,
     ) -> None:
         self.enabled = enabled
         self.provider = provider
         self.trace = trace
         self.controlled_trainers = controlled_trainers
         self.strict_validation = strict_validation
+        self.autoplay = autoplay
         self.score = HermesBattleScore()
         self.client: Any | None = None
 
@@ -56,6 +58,7 @@ class HermesRuntime:
             trace=JsonlTraceWriter(hermes.trace_path, enabled=hermes.enabled),
             controlled_trainers=list(hermes.controlled_trainers),
             strict_validation=hermes.strict_validation,
+            autoplay=hermes.autoplay,
         )
 
     def attach_client(self, client: Any) -> None:
@@ -68,7 +71,10 @@ class HermesRuntime:
         )
         self.emit(
             "runtime.started",
-            {"controlled_trainers": self.controlled_trainers},
+            {
+                "controlled_trainers": self.controlled_trainers,
+                "autoplay": self.autoplay,
+            },
         )
 
     def close(self) -> None:
@@ -84,11 +90,16 @@ class HermesRuntime:
             self.trace.write(event_type, payload)
 
     def should_control(self, ai: AI) -> bool:
+        return self.should_control_character(ai.character)
+
+    def should_control_character(self, character: NPC) -> bool:
         if not self.enabled:
             return False
         if "*" in self.controlled_trainers:
             return True
-        return ai.character.slug in self.controlled_trainers
+        if self.autoplay and getattr(character, "is_player", False):
+            return True
+        return character.slug in self.controlled_trainers
 
     def take_turn(self, ai: AI) -> bool:
         if not self.should_control(ai):

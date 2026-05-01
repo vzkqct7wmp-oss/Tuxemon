@@ -120,6 +120,7 @@ class HermesConfigModel(BaseModel):
     """Configuration for structured Hermes agent control."""
 
     enabled: bool = False
+    autoplay: bool = False
     provider: Literal["local", "scripted"] = "local"
     trace_path: str = "hermes_traces/agent_trainer_circuit.jsonl"
     controlled_trainers: list[str] = Field(

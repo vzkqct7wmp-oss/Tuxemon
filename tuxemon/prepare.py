@@ -102,8 +102,16 @@ def headless_init() -> DisplayContext:
 
     pg.display.init()
     pg.font.init()
+    try:
+        pg.mixer.init()
+    except pg.error as exc:
+        logger.warning("Headless mixer initialization failed: %s", exc)
+        from tuxemon.platform import DummyMixer, platform
 
-    screen = pg.Surface(CONFIG.resolution)
+        platform.mixer = DummyMixer()
+        platform._pygame_mixer_in_use = False
+
+    screen = pg.display.set_mode(CONFIG.resolution)
     rect = screen.get_rect()
 
     DISPLAY_CONTEXT = DisplayContext(

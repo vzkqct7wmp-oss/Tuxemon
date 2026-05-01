@@ -105,3 +105,19 @@ def test_runtime_dispatches_legal_provider_action():
     assert target is ai.target
     assert source == "hermes"
     assert metadata["action_id"].startswith("technique:")
+
+
+def test_autoplay_controls_player_character():
+    runtime = HermesRuntime(
+        enabled=True,
+        provider=FirstProvider(),
+        trace=JsonlTraceWriter(None, enabled=False),
+        controlled_trainers=["hermes_agent_trainer"],
+        autoplay=True,
+    )
+
+    assert runtime.should_control_character(FakeOwner("player")) is False
+
+    player = type("Player", (), {"slug": "player", "is_player": True})()
+
+    assert runtime.should_control_character(player) is True
