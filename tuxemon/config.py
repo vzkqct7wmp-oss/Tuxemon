@@ -116,6 +116,18 @@ class ControllerConfigModel(BaseModel):
     combo_window_seconds: float = 5.0
 
 
+class HermesConfigModel(BaseModel):
+    """Configuration for structured Hermes agent control."""
+
+    enabled: bool = False
+    provider: Literal["local", "scripted"] = "local"
+    trace_path: str = "hermes_traces/agent_trainer_circuit.jsonl"
+    controlled_trainers: list[str] = Field(
+        default_factory=lambda: ["hermes_agent_trainer"]
+    )
+    strict_validation: bool = True
+
+
 class LoggingConfigModel(BaseModel):
     loggers: str = "all"
     debug_logging: bool = True
@@ -136,6 +148,7 @@ class TuxemonFullConfig(BaseModel):
     controller: ControllerConfigModel = Field(
         default_factory=ControllerConfigModel
     )
+    hermes: HermesConfigModel = Field(default_factory=HermesConfigModel)
     logging: LoggingConfigModel = Field(default_factory=LoggingConfigModel)
 
 
@@ -296,6 +309,10 @@ class TuxemonConfig:
     @property
     def combat_click_to_continue(self) -> bool:
         return self.config_model.gameplay.combat_click_to_continue
+
+    @property
+    def hermes(self) -> HermesConfigModel:
+        return self.config_model.hermes
 
     @property
     def dialog_box_style(self) -> str:

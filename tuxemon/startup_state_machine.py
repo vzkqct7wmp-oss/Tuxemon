@@ -93,12 +93,10 @@ class RuleMods(StartupRule):
         return self.config.skip_titlescreen and bool(self.config.mods)
 
     def apply(self) -> None:
-        if len(self.config.mods) == 1:
-            launcher = GameLauncher(self.client)
-            meta = db.mod_metadata.get_mod_metadata(self.config.mods[0])
-            launcher.launch(session=local_session, meta=meta)
-        else:
-            self.client.push_state("ModsChoice", mods=self.config.mods)
+        launch_mod = self.config.mods[-1]
+        launcher = GameLauncher(self.client)
+        meta = db.mod_metadata.get_mod_metadata(launch_mod)
+        launcher.launch(session=local_session, meta=meta)
 
 
 class StartupStateMachine:

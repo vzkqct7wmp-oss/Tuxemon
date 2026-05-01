@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 import random
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from tuxemon.combat.sort_manager import SortManager
 from tuxemon.entity.npc import NPC
@@ -24,6 +24,8 @@ class EnqueuedAction:
     user: Monster | NPC | None
     method: Technique | Item | Status | None
     target: Monster
+    source: str | None = None
+    metadata: dict[str, Any] = field(default_factory=dict)
     sub_priority: float = field(default_factory=random.random)
 
     def __repr__(self) -> str:

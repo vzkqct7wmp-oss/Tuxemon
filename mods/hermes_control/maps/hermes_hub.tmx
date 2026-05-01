@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map version="1.10" tiledversion="git" orientation="orthogonal" renderorder="right-down" compressionlevel="0" width="9" height="7" tilewidth="16" tileheight="16" infinite="0" nextlayerid="4" nextobjectid="8">
+ <properties>
+  <property name="edges" value="clamped"/>
+  <property name="inside" type="bool" value="true"/>
+  <property name="slug" value="hermes_hub"/>
+  <property name="map_type" value="notype"/>
+ </properties>
+ <tileset firstgid="1" name="core_indoor_floors" tilewidth="16" tileheight="16" tilecount="3864" columns="46">
+  <image source="../../tuxemon/gfx/tilesets/core_indoor_floors.png" width="736" height="1344"/>
+ </tileset>
+ <layer id="1" name="Tile Layer 1" width="9" height="7">
+  <data encoding="csv">
+1,1,1,1,1,1,1,1,1,
+1,1,1,1,1,1,1,1,1,
+1,1,1,1,1,1,1,1,1,
+1,1,1,1,1,1,1,1,1,
+1,1,1,1,1,1,1,1,1,
+1,1,1,1,1,1,1,1,1,
+1,1,1,1,1,1,1,1,1
+  </data>
+ </layer>
+ <objectgroup color="#ff0000" id="2" name="Collisions">
+  <object id="1" type="collision" x="0" y="0" width="144" height="16"/>
+  <object id="2" type="collision" x="0" y="96" width="144" height="16"/>
+  <object id="3" type="collision" x="0" y="0" width="16" height="112"/>
+  <object id="4" type="collision" x="128" y="0" width="16" height="112"/>
+ </objectgroup>
+ <objectgroup color="#ffff00" id="3" name="Events">
+  <object id="5" name="Initialize Hermes Circuit" type="event" x="0" y="0" width="16" height="16">
+   <properties>
+    <property name="act1" value="set_environment stadium"/>
+    <property name="act2" value="create_npc hermes_coordinator,4,2"/>
+    <property name="cond1" value="not char_exists hermes_coordinator"/>
+   </properties>
+  </object>
+  <object id="6" name="Start Hermes Circuit" type="event" x="64" y="16" width="16" height="16">
+   <properties>
+    <property name="act1" value="translated_dialog hermes_control_intro"/>
+    <property name="act2" value="hermes_start_circuit_battle hermes_agent_trainer"/>
+    <property name="behav1" value="talk hermes_coordinator"/>
+    <property name="cond1" value="not variable_set hermes_circuit_started:yes"/>
+   </properties>
+  </object>
+  <object id="7" name="Hermes Score Report" type="event" x="64" y="16" width="16" height="16">
+   <properties>
+    <property name="act1" value="translated_dialog hermes_control_complete"/>
+    <property name="act2" value="hermes_score_report"/>
+    <property name="behav1" value="talk hermes_coordinator"/>
+    <property name="cond1" value="is variable_set hermes_circuit_started:yes"/>
+    <property name="cond2" value="is variable_set battle_last_result"/>
+   </properties>
+  </object>
+ </objectgroup>
+</map>

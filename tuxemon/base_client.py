@@ -30,6 +30,7 @@ from tuxemon.event.eventengine import EventEngine
 from tuxemon.event.eventmanager import EventManager
 from tuxemon.event.eventpersist import EventPersist
 from tuxemon.event.running import ConditionEvaluator
+from tuxemon.hermes.runtime import HermesRuntime
 from tuxemon.map.collision_manager import CollisionManager
 from tuxemon.map.loader import MapLoader
 from tuxemon.map.manager import MapManager
@@ -192,6 +193,8 @@ class BaseClient(ABC):
         self.shop_manager = ShopManager()
 
         self.command_queue: Queue[Callable[[], None]] = Queue()
+        self.hermes_runtime = HermesRuntime.from_config(config)
+        self.hermes_runtime.attach_client(self)
 
         if self.config.cli:
             local_session.set_client(self)
@@ -220,6 +223,7 @@ class BaseClient(ABC):
         """Handles necessary cleanup before shutting down."""
         self.map_loader.clear_cache()
         self.current_music.stop()
+        self.hermes_runtime.close()
         self.event_bus.reset_all_events()
         local_session.reset()
         local_session.reset_time()

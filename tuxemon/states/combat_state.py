@@ -480,11 +480,12 @@ class CombatState(CombatAnimations):
         """
         message = ""
         for player in players:
+            opponents_list = list(opponents if opponents else players)
             message += ("\n" if message else "") + track_battles(
                 session=self.session,
                 output=result_type,
                 character=player,
-                opponents=opponents if opponents else players,
+                opponents=opponents_list,
                 turns=self.combat_session.turn,
                 combat_type=self.combat_session.combat_type,
                 prize=(
@@ -493,6 +494,14 @@ class CombatState(CombatAnimations):
                     else 0
                 ),
             )
+            runtime = getattr(self.client, "hermes_runtime", None)
+            if runtime is not None:
+                runtime.record_battle_result(
+                    result_type,
+                    player,
+                    opponents_list,
+                    self.combat_session.turn,
+                )
         return message
 
     def process_player_decisions(self) -> None:
@@ -583,6 +592,12 @@ class CombatState(CombatAnimations):
         target: Monster,
     ) -> None:
         action_time = 0.0
+        runtime = getattr(self.client, "hermes_runtime", None)
+        before = (
+            runtime.snapshot_combat(self.combat_session)
+            if runtime is not None
+            else {}
+        )
         # animate action; target sprite is None if off-screen
         target_sprite = self.sprite_map.get_sprite(target)
         # slightly delay the monster shake, so technique animation
@@ -592,6 +607,16 @@ class CombatState(CombatAnimations):
         result_tech, status_result = self.combat_session.apply_technique(
             self.session, method, user, target
         )
+        if runtime is not None:
+            runtime.record_action_result(
+                kind="technique",
+                user=user,
+                method=method,
+                target=target,
+                result=result_tech,
+                before=before,
+                after=runtime.snapshot_combat(self.combat_session),
+            )
         context = {
             "user": user.name,
             "name": method.name,
@@ -714,9 +739,25 @@ class CombatState(CombatAnimations):
         target: Monster,
     ) -> None:
         action_time = 0.0
+        runtime = getattr(self.client, "hermes_runtime", None)
+        before = (
+            runtime.snapshot_combat(self.combat_session)
+            if runtime is not None
+            else {}
+        )
         result_item = self.combat_session.apply_item(
             self.session, item, user, target
         )
+        if runtime is not None:
+            runtime.record_action_result(
+                kind="item",
+                user=user,
+                method=item,
+                target=target,
+                result=result_item,
+                before=before,
+                after=runtime.snapshot_combat(self.combat_session),
+            )
         context = {
             "user": user.name,
             "name": item.name,
@@ -792,9 +833,25 @@ class CombatState(CombatAnimations):
 
     def _handle_status(self, status: Status, target: Monster) -> None:
         action_time = 0.0
+        runtime = getattr(self.client, "hermes_runtime", None)
+        before = (
+            runtime.snapshot_combat(self.combat_session)
+            if runtime is not None
+            else {}
+        )
         result = self.combat_session.apply_status(
             self.session, status, target, EffectPhase.PERFORM_STATUS
         )
+        if runtime is not None:
+            runtime.record_action_result(
+                kind="status",
+                user=None,
+                method=status,
+                target=target,
+                result=result,
+                before=before,
+                after=runtime.snapshot_combat(self.combat_session),
+            )
         context = {
             "name": status.name,
             "target": target.name,

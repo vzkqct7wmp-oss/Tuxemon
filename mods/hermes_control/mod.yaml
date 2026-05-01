@@ -1,0 +1,14 @@
+slug: hermes_control
+description: Structured Hermes agent trainer circuit for deterministic battles.
+name: Hermes Control
+version: 0.1.0
+authors:
+  - Codex
+starting_players: ["hermes_player"]
+starting_map: "hermes_hub.tmx"
+starting_position: [4, 4]
+starting_money: [0, 0]
+starting_names:
+  - hermes_player
+sprite: adventurer
+combat_sheet: adventurer

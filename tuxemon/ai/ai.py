@@ -251,6 +251,10 @@ class AI:
         """
         Causes this AI monster to make and execute its decision for the current turn.
         """
+        runtime = getattr(self.session.client, "hermes_runtime", None)
+        if runtime is not None and runtime.take_turn(self):
+            return
+
         self.decision_strategy.make_decision(self)
 
     def get_available_moves(self) -> list[tuple[Technique, Monster]]:
@@ -261,7 +265,13 @@ class AI:
         """Use OpponentEvaluator to find the best target opponent."""
         return self.evaluator.get_best_target()
 
-    def action_tech(self, technique: Technique, target: Monster) -> None:
+    def action_tech(
+        self,
+        technique: Technique,
+        target: Monster,
+        source: str | None = None,
+        metadata: dict[str, object] | None = None,
+    ) -> None:
         """
         Send action tech.
         """
@@ -269,10 +279,19 @@ class AI:
         technique = self.combat_session.pre_checking(
             self.session, self.monster, technique, target
         )
-        self.combat_session.enqueue_action(self.monster, technique, target)
+        self.combat_session.enqueue_action(
+            self.monster, technique, target, source, metadata
+        )
 
-    def action_item(self, item: Item) -> None:
+    def action_item(
+        self,
+        item: Item,
+        source: str | None = None,
+        metadata: dict[str, object] | None = None,
+    ) -> None:
         """
         Send action item.
         """
-        self.combat_session.enqueue_action(self.character, item, self.monster)
+        self.combat_session.enqueue_action(
+            self.character, item, self.monster, source, metadata
+        )

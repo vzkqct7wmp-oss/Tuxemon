@@ -377,6 +377,8 @@ class CombatSession:
         user: NPC | Monster | None,
         technique: Item | Technique | Status | None,
         target: Monster,
+        source: str | None = None,
+        metadata: dict[str, Any] | None = None,
     ) -> None:
         """
         Add some technique or status to the action queue.
@@ -386,8 +388,11 @@ class CombatSession:
             technique: The technique used.
             target: The target of the action.
         """
-        action = EnqueuedAction(user, technique, target)
+        action = EnqueuedAction(user, technique, target, source, metadata or {})
         self.action_queue.enqueue(action, self.turn)
+        self.event_bus.publish(
+            "hermes.combat.action_queued", action=action, turn=self.turn
+        )
 
     def enqueue_damage(
         self, attacker: Monster, defender: Monster, damage: int

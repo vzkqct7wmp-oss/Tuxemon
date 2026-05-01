@@ -45,6 +45,19 @@ def test_enqueue_updates_queue_and_history(queue, action):
     assert queue.history.history == [(1, action)]
 
 
+def test_enqueued_action_keeps_hermes_metadata(monster, monster2, technique):
+    action = EnqueuedAction(
+        monster,
+        technique,
+        monster2,
+        source="hermes",
+        metadata={"action_id": "a"},
+    )
+
+    assert action.source == "hermes"
+    assert action.metadata == {"action_id": "a"}
+
+
 def test_dequeue_removes_from_queue_and_history(queue, action):
     queue.enqueue(action, 1)
     queue.dequeue(action)

@@ -54,8 +54,39 @@ def build_parser() -> ArgumentParser:
         default=False,
         help="Run in headless mode (no graphical interface).",
     )
+    parser.add_argument(
+        "--skip-titlescreen",
+        action="store_true",
+        default=False,
+        help="Launch directly into the selected mod.",
+    )
+    parser.add_argument(
+        "--hermes-agent",
+        action="store_true",
+        default=False,
+        help="Enable structured Hermes agent control.",
+    )
+    parser.add_argument(
+        "--hermes-provider",
+        choices=("local", "scripted"),
+        default=None,
+        help="Hermes decision provider to use.",
+    )
+    parser.add_argument(
+        "--hermes-trace",
+        metavar="JSONL_PATH",
+        default=None,
+        help="Path for Hermes JSONL decision and telemetry traces.",
+    )
 
     return parser
+
+
+def _normalize_mod_name(mod: str) -> str:
+    mod_path = Path(mod)
+    if mod_path.exists() and mod_path.is_dir():
+        return mod_path.name
+    return mod
 
 
 def parse_args(argv: list[str] | None = None) -> Namespace:
@@ -64,9 +95,17 @@ def parse_args(argv: list[str] | None = None) -> Namespace:
 
     if args.mod:
         mod_path = Path(args.mod)
-        if not mod_path.exists() or not mod_path.is_dir():
+        from tuxemon.constants.paths import mods_folder
+
+        installed_mod_path = mods_folder / args.mod
+        if mod_path.exists() and mod_path.is_dir():
+            args.mod = mod_path.name
+        elif installed_mod_path.exists() and installed_mod_path.is_dir():
+            args.mod = installed_mod_path.name
+        else:
             parser.error(
-                f"Mod directory does not exist or is not a directory: {mod_path}"
+                "Mod directory does not exist or is not an installed mod: "
+                f"{mod_path}"
             )
 
     return args
@@ -88,11 +127,22 @@ def init_display(platform: str = "pygame") -> DisplayContext:
 
 def apply_config_from_args(config: TuxemonConfig, args: Namespace) -> None:
     if args.mod:
-        config.mods.insert(0, args.mod)
+        mod_name = _normalize_mod_name(args.mod)
+        if mod_name not in config.mods:
+            config.mods.append(mod_name)
 
-    if args.test_map:
-        config.skip_titlescreen = True
-        config.splash = False
+    if args.test_map or getattr(args, "skip_titlescreen", False):
+        config.config_model.game.skip_titlescreen = True
+        config.config_model.display.splash = False
+
+    if getattr(args, "hermes_agent", False) or args.mod == "hermes_control":
+        config.config_model.hermes.enabled = True
+
+    if getattr(args, "hermes_provider", None):
+        config.config_model.hermes.provider = args.hermes_provider
+
+    if getattr(args, "hermes_trace", None):
+        config.config_model.hermes.trace_path = args.hermes_trace
 
 
 def handle_fatal_error(e: Exception) -> None:
@@ -124,6 +174,13 @@ def handle_fatal_error(e: Exception) -> None:
 
 def launch_game(argv: list[str] | None = None) -> None:
     args = parse_args(argv)
+    config = CONFIG.copy()
+    apply_config_from_args(config, args)
+
+    import tuxemon.user_config as user_config
+
+    user_config.CONFIG = config
+    config.logging.configure()
 
     from tuxemon.platform import platform
 
@@ -136,12 +193,7 @@ def launch_game(argv: list[str] | None = None) -> None:
 
     from tuxemon import main as tuxemon_main
 
-    config = CONFIG.copy()
-    config.logging.configure()
-
     try:
-        apply_config_from_args(config, args)
-
         if args.headless:
             tuxemon_main.headless(config=config, context=context)
         else:

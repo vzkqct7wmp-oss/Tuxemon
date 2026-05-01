@@ -9456,6 +9456,21 @@ msgstr "Misa"
 msgid "timmy"
 msgstr "Timmy"
 
+msgid "hermes_player"
+msgstr "Hermes Tester"
+
+msgid "hermes_coordinator"
+msgstr "Run Coordinator"
+
+msgid "hermes_agent_trainer"
+msgstr "Hermes Agent Trainer"
+
+msgid "hermes_control_intro"
+msgstr "Starting the Agent Trainer Circuit."
+
+msgid "hermes_control_complete"
+msgstr "Circuit complete. Score report follows."
+
 msgid "professor"
 msgstr "Professor"
 
